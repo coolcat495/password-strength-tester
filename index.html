@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wachtwoordsterkte Tester</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+
+        h2 {
+            color: #555;
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+
+        /* Input Section */
+        .input-section {
+            margin-bottom: 30px;
+            position: relative;
+            display: none;
+        }
+
+        .input-section.active {
+            display: block;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        input[type="password"],
+        input[type="text"] {
+            width: 100%;
+            padding: 12px 40px 12px 12px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="password"]:focus,
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .toggle-btn {
+            position: absolute;
+            right: 10px;
+            top: 32px;
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 5px;
+            transition: transform 0.2s;
+        }
+
+        .toggle-btn:hover {
+            transform: scale(1.1);
+        }
+
+        /* Strength Meter */
+        .strength-meter {
+            margin-bottom: 30px;
+            display: none;
+        }
+
+        .strength-meter.active {
+            display: block;
+        }
+
+        .strength-bar {
+            width: 100%;
+            height: 8px;
+            background-color: #ddd;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            overflow: hidden;
+        }
+
+        .strength-bar::after {
+            content: '';
+            display: block;
+            height: 100%;
+            width: 0%;
+            background-color: #ccc;
+            border-radius: 10px;
+            transition: width 0.3s, background-color 0.3s;
+        }
+
+        .strength-bar.weak::after {
+            width: 25%;
+            background-color: #e74c3c;
+        }
+
+        .strength-bar.fair::after {
+            width: 50%;
+            background-color: #f39c12;
+        }
+
+        .strength-bar.good::after {
+            width: 75%;
+            background-color: #3498db;
+        }
+
+        .strength-bar.verystrong::after {
+            width: 100%;
+            background-color: #27ae60;
+        }
+
+        #strengthText {
+            text-align: center;
+            font-size: 14px;
+            font-weight: 600;
+            color: #666;
+        }
+
+        /* Checklist */
+        .checklist {
+            display: none;
+        }
+
+        .checklist.active {
+            display: block;
+        }
+
+        .checklist ul {
+            list-style: none;
+        }
+
+        .check-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 0;
+            color: #999;
+            transition: color 0.3s;
+        }
+
+        .check-item.met {
+            color: #27ae60;
+        }
+
+        .check-icon {
+            margin-right: 10px;
+            font-size: 16px;
+            min-width: 20px;
+        }
+
+        .check-item.met .check-icon::before {
+            content: '✅';
+        }
+
+        .check-item .check-icon::before {
+            content: '❌';
+        }
+
+        /* Buttons */
+        .test-btn, .btn-primary, .btn-logout, .btn-danger, .btn-delete {
+            padding: 12px;
+            background-color: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .test-btn {
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .test-btn:hover:not(:disabled) {
+            background-color: #764ba2;
+        }
+
+        .test-btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .btn-primary:hover {
+            background-color: #764ba2;
+        }
+
+        .btn-logout, .btn-danger, .btn-delete {
+            background-color: #e74c3c;
+            padding: 10px 20px;
+            font-size: 14px;
+        }
+
+        .btn-logout:hover, .btn-danger:hover, .btn-delete:hover {
+            background-color: #c0392b;
+        }
+
+        .btn-delete {
+            padding: 6px 10px;
+            font-size: 12px;
+        }
+
+        .success-message {
+            color: #27ae60;
+            text-align: center;
+            margin-top: 10px;
+            font-weight: 600;
+            display: none;
+        }
+
+        .success-message.active {
+            display: block;
+        }
+
+        .admin-link {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+        }
+
+        .admin-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s;
+        }
+
+        .admin-link a:hover {
+            color: #764ba2;
+        }
+
+        /* Login Section */
+        .login-section {
+            text-align: center;
+            display: none;
+        }
+
+        .login-section.active {
+            display: block;
+        }
+
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .error-message {
+            color: #e74c3c;
+            font-weight: 600;
+            display: none;
+        }
+
+        .error-message.active {
+            display: block;
+        }
+
+        /* Dashboard */
+        .dashboard-section {
+            display: none;
+        }
+
+        .dashboard-section.active {
+            display: block;
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .dashboard-header h1 {
+            margin: 0;
+        }
+
+        /* Stats */
+        .dashboard-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-box h3 {
+            font-size: 12px;
+            margin-bottom: 10px;
+            opacity: 0.9;
+        }
+
+        .stat-box p {
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        /* Search */
+        .search-section {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .search-section input {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .search-section input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        /* Table */
+        .table-section {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th {
+            background-color: #667eea;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        tbody tr:hover {
+            background-color: #f5f5f5;
+        }
+
+        .strength-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 12px;
+            color: white;
+            display: inline-block;
+        }
+
+        .strength-badge.weak {
+            background-color: #e74c3c;
+        }
+
+        .strength-badge.fair {
+            background-color: #f39c12;
+        }
+
+        .strength-badge.good {
+            background-color: #3498db;
+        }
+
+        .strength-badge.verystrong {
+            background-color: #27ae60;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 25px;
+            }
+
+            h1 {
+                font-size: 24px;
+                margin-bottom: 20px;
+            }
+
+            .dashboard-header {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .dashboard-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            table {
+                font-size: 12px;
+            }
+
+            th, td {
+                padding: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="mainContainer">
+        <!-- PUBLIEKE PAGINA -->
+        <div id="publicPage">
+            <h1>🔐 Wachtwoordsterkte Tester</h1>
+            
+            <div class="input-section active">
+                <label for="password">Voer je wachtwoord in:</label>
+                <input type="password" id="password" placeholder="Typ hier je wachtwoord...">
+                <button id="toggleBtn" class="toggle-btn">👁️ Tonen</button>
+            </div>
+
+            <div class="strength-meter">
+                <div class="strength-bar" id="strengthBar"></div>
+                <p id="strengthText">Voer een wachtwoord in</p>
+            </div>
+
+            <div class="checklist active">
+                <h2>Vereisten:</h2>
+                <ul>
+                    <li id="lengthCheck" class="check-item">
+                        <span class="check-icon">❌</span>
+                        <span>Minimaal 8 karakters</span>
+                    </li>
+                    <li id="uppercaseCheck" class="check-item">
+                        <span class="check-icon">❌</span>
+                        <span>Minstens 1 hoofdletter (A-Z)</span>
+                    </li>
+                    <li id="lowercaseCheck" class="check-item">
+                        <span class="check-icon">❌</span>
+                        <span>Minstens 1 kleine letter (a-z)</span>
+                    </li>
+                    <li id="numberCheck" class="check-item">
+                        <span class="check-icon">❌</span>
+                        <span>Minstens 1 getal (0-9)</span>
+                    </li>
+                    <li id="specialCheck" class="check-item">
+                        <span class="check-icon">❌</span>
+                        <span>Minstens 1 speciaal karakter (!@#$%^&*)</span>
+                    </li>
+                </ul>
+            </div>
+
+            <button id="testBtn" class="test-btn" disabled>📊 Wachtwoord Testen</button>
+            <p id="successMessage" class="success-message">✅ Wachtwoord opgeslagen!</p>
+
+            <div class="admin-link">
+                <a href="#" onclick="goToAdmin(); return false;">🔑 Admin Dashboard</a>
+            </div>
+        </div>
+
+        <!-- ADMIN PAGINA -->
+        <div id="adminPage" style="display: none;">
+            <div id="loginSection" class="login-section active">
+                <h1>🔐 Admin Login</h1>
+                <div class="login-form">
+                    <input type="text" id="adminUsername" placeholder="Gebruikersnaam">
+                    <input type="password" id="adminPassword" placeholder="Wachtwoord">
+                    <button id="loginBtn" class="btn-primary">Inloggen</button>
+                </div>
+                <p id="loginError" class="error-message">❌ Fout gebruikersnaam of wachtwoord!</p>
+                <div style="margin-top: 20px;">
+                    <a href="#" onclick="goToPublic(); return false;" style="color: #667eea; text-decoration: none; font-weight: 600;">← Terug naar tester</a>
+                </div>
+            </div>
+
+            <div id="dashboardSection" class="dashboard-section">
+                <div class="dashboard-header">
+                    <h1>📊 Admin Dashboard</h1>
+                    <button id="logoutBtn" class="btn-logout">Uitloggen</button>
+                </div>
+
+                <div class="dashboard-stats">
+                    <div class="stat-box">
+                        <h3>Totaal getest</h3>
+                        <p id="totalCount">0</p>
+                    </div>
+                    <div class="stat-box">
+                        <h3>Zeer sterk</h3>
+                        <p id="veryStrongCount">0</p>
+                    </div>
+                    <div class="stat-box">
+                        <h3>Sterk</h3>
+                        <p id="strongCount">0</p>
+                    </div>
+                    <div class="stat-box">
+                        <h3>Matig</h3>
+                        <p id="fairCount">0</p>
+                    </div>
+                    <div class="stat-box">
+                        <h3>Zwak</h3>
+                        <p id="weakCount">0</p>
+                    </div>
+                </div>
+
+                <div class="search-section">
+                    <input type="text" id="searchInput" placeholder="🔍 Zoek wachtwoord...">
+                    <button id="clearBtn" class="btn-danger">🗑️ Alles wissen</button>
+                </div>
+
+                <div class="table-section">
+                    <table id="passwordTable">
+                        <thead>
+                            <tr>
+                                <th>Wachtwoord</th>
+                                <th>Sterkte</th>
+                                <th>Datum & Tijd</th>
+                                <th>Actie</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                            <tr>
+                                <td colspan="4">Geen wachtwoorden opgeslagen</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===== CONFIGURATIE =====
+        const adminUsername = 'jooren';
+        const adminPassword = '2542';
+
+        // ===== PUBLIEKE PAGINA JAVASCRIPT =====
+        const passwordInput = document.getElementById('password');
+        const toggleBtn = document.getElementById('toggleBtn');
+        const strengthBar = document.getElementById('strengthBar');
+        const strengthText = document.getElementById('strengthText');
+        const testBtn = document.getElementById('testBtn');
+        const successMessage = document.getElementById('successMessage');
+
+        const lengthCheck = document.getElementById('lengthCheck');
+        const uppercaseCheck = document.getElementById('uppercaseCheck');
+        const lowercaseCheck = document.getElementById('lowercaseCheck');
+        const numberCheck = document.getElementById('numberCheck');
+        const specialCheck = document.getElementById('specialCheck');
+
+        let currentStrength = 'weak';
+
+        // Wachtwoord zichtbaarheid toggle
+        toggleBtn.addEventListener('click', () => {
+            const isPassword = passwordInput.type === 'password';
+            passwordInput.type = isPassword ? 'text' : 'password';
+            toggleBtn.textContent = isPassword ? '👁️‍🗨️ Verbergen' : '👁️ Tonen';
+        });
+
+        // Controleer wachtwoord sterkte
+        passwordInput.addEventListener('input', () => {
+            const password = passwordInput.value;
+            
+            const hasLength = password.length >= 8;
+            const hasLongLength = password.length >= 12;
+            const hasUppercase = /[A-Z]/.test(password);
+            const hasLowercase = /[a-z]/.test(password);
+            const hasNumber = /[0-9]/.test(password);
+            const hasSpecial = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
+            
+            updateCheck(lengthCheck, hasLength);
+            updateCheck(uppercaseCheck, hasUppercase);
+            updateCheck(lowercaseCheck, hasLowercase);
+            updateCheck(numberCheck, hasNumber);
+            updateCheck(specialCheck, hasSpecial);
+            
+            const strengthScore = [
+                hasLength,
+                hasLongLength,
+                hasUppercase,
+                hasLowercase,
+                hasNumber,
+                hasSpecial
+            ].filter(Boolean).length;
+            
+            updateStrength(strengthScore, password.length);
+            testBtn.disabled = password.length === 0;
+            successMessage.classList.remove('active');
+        });
+
+        function updateCheck(element, isMet) {
+            if (isMet) {
+                element.classList.add('met');
+            } else {
+                element.classList.remove('met');
+            }
+        }
+
+        function updateStrength(score, length) {
+            strengthBar.className = 'strength-bar';
+            
+            if (length === 0) {
+                strengthText.textContent = 'Voer een wachtwoord in';
+                currentStrength = 'weak';
+                return;
+            }
+            
+            if (score <= 1) {
+                strengthBar.classList.add('weak');
+                strengthText.textContent = 'Zwak wachtwoord ❌';
+                currentStrength = 'weak';
+            } else if (score === 2 || score === 3) {
+                strengthBar.classList.add('fair');
+                strengthText.textContent = 'Matig wachtwoord ⚠️';
+                currentStrength = 'fair';
+            } else if (score === 4 || score === 5) {
+                strengthBar.classList.add('good');
+                strengthText.textContent = 'Sterk wachtwoord ✅';
+                currentStrength = 'good';
+            } else if (score === 6) {
+                strengthBar.classList.add('verystrong');
+                strengthText.textContent = 'Zeer sterk wachtwoord 🔐';
+                currentStrength = 'verystrong';
+            }
+        }
+
+        // Test button
+        testBtn.addEventListener('click', () => {
+            const password = passwordInput.value;
+            let passwords = JSON.parse(localStorage.getItem('testedPasswords')) || [];
+            
+            passwords.push({
+                password: password,
+                strength: currentStrength,
+                timestamp: new Date().toLocaleString('nl-NL')
+            });
+            
+            localStorage.setItem('testedPasswords', JSON.stringify(passwords));
+            
+            successMessage.classList.add('active');
+            setTimeout(() => {
+                successMessage.classList.remove('active');
+            }, 3000);
+            
+            passwordInput.value = '';
+            passwordInput.type = 'password';
+            toggleBtn.textContent = '👁️ Tonen';
+            testBtn.disabled = true;
+            strengthBar.className = 'strength-bar';
+            strengthText.textContent = 'Voer een wachtwoord in';
+            
+            updateCheck(lengthCheck, false);
+            updateCheck(uppercaseCheck, false);
+            updateCheck(lowercaseCheck, false);
+            updateCheck(numberCheck, false);
+            updateCheck(specialCheck, false);
+        });
+
+        // ===== ADMIN PAGINA JAVASCRIPT =====
+        const adminUsernameInput = document.getElementById('adminUsername');
+        const adminPasswordInput = document.getElementById('adminPassword');
+        const loginBtn = document.getElementById('loginBtn');
+        const loginError = document.getElementById('loginError');
+        const loginSection = document.getElementById('loginSection');
+        const dashboardSection = document.getElementById('dashboardSection');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const searchInput = document.getElementById('searchInput');
+        const clearBtn = document.getElementById('clearBtn');
+
+        let isLoggedIn = false;
+
+        loginBtn.addEventListener('click', () => {
+            if (adminUsernameInput.value === adminUsername && adminPasswordInput.value === adminPassword) {
+                isLoggedIn = true;
+                loginError.classList.remove('active');
+                loginSection.classList.remove('active');
+                dashboardSection.classList.add('active');
+                loadDashboard();
+            } else {
+                loginError.classList.add('active');
+                adminUsernameInput.value = '';
+                adminPasswordInput.value = '';
+            }
+        });
+
+        adminPasswordInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                loginBtn.click();
+            }
+        });
+
+        logoutBtn.addEventListener('click', () => {
+            isLoggedIn = false;
+            loginSection.classList.add('active');
+            dashboardSection.classList.remove('active');
+            adminUsernameInput.value = '';
+            adminPasswordInput.value = '';
+            loginError.classList.remove('active');
+        });
+
+        function loadDashboard() {
+            const passwords = JSON.parse(localStorage.getItem('testedPasswords')) || [];
+            displayPasswords(passwords);
+            updateStats(passwords);
+        }
+
+        function displayPasswords(passwords) {
+            const tableBody = document.getElementById('tableBody');
+            
+            if (passwords.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="4">Geen wachtwoorden opgeslagen</td></tr>';
+                return;
+            }
+            
+            tableBody.innerHTML = passwords.map((item, index) => `
+                <tr>
+                    <td><code>${escapeHtml(item.password)}</code></td>
+                    <td><span class="strength-badge ${item.strength}">${getStrengthText(item.strength)}</span></td>
+                    <td>${item.timestamp}</td>
+                    <td><button class="btn-delete" onclick="deletePassword(${index})">Verwijderen</button></td>
+                </tr>
+            `).join('');
+        }
+
+        function updateStats(passwords) {
+            document.getElementById('totalCount').textContent = passwords.length;
+            document.getElementById('veryStrongCount').textContent = passwords.filter(p => p.strength === 'verystrong').length;
+            document.getElementById('strongCount').textContent = passwords.filter(p => p.strength === 'good').length;
+            document.getElementById('fairCount').textContent = passwords.filter(p => p.strength === 'fair').length;
+            document.getElementById('weakCount').textContent = passwords.filter(p => p.strength === 'weak').length;
+        }
+
+        function getStrengthText(strength) {
+            const strengthMap = {
+                'weak': 'Zwak',
+                'fair': 'Matig',
+                'good': 'Sterk',
+                'verystrong': 'Zeer sterk'
+            };
+            return strengthMap[strength] || 'Onbekend';
+        }
+
+        function deletePassword(index) {
+            let passwords = JSON.parse(localStorage.getItem('testedPasswords')) || [];
+            passwords.splice(index, 1);
+            localStorage.setItem('testedPasswords', JSON.stringify(passwords));
+            loadDashboard();
+        }
+
+        searchInput.addEventListener('input', () => {
+            const searchTerm = searchInput.value.toLowerCase();
+            const passwords = JSON.parse(localStorage.getItem('testedPasswords')) || [];
+            const filtered = passwords.filter(p => p.password.toLowerCase().includes(searchTerm));
+            displayPasswords(filtered);
+        });
+
+        clearBtn.addEventListener('click', () => {
+            if (confirm('Weet je zeker dat je alles wilt wissen? Dit kan niet ongedaan gemaakt worden!')) {
+                localStorage.setItem('testedPasswords', JSON.stringify([]));
+                loadDashboard();
+                searchInput.value = '';
+            }
+        });
+
+        function escapeHtml(unsafe) {
+            return unsafe
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        // ===== NAVIGATIE =====
+        function goToAdmin() {
+            document.getElementById('publicPage').style.display = 'none';
+            document.getElementById('adminPage').style.display = 'block';
+        }
+
+        function goToPublic() {
+            document.getElementById('adminPage').style.display = 'none';
+            document.getElementById('publicPage').style.display = 'block';
+        }
+    </script>
+</body>
+</html>
